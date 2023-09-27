@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
-class RequestLog extends Model
+class ExceptionLog extends Model
 {
     use HasFactory;
 
-    const TABLE_SUFFIX = '_request_logs';
+    const TABLE_SUFFIX = '_exception_logs';
 
     public function setTableName(string $date): void
     {
@@ -18,11 +18,10 @@ class RequestLog extends Model
         if (!Schema::hasTable($tableName)) {
             Schema::create($tableName, function ($table) {
                 $table->id();
-                $table->string('method', 20)->nullable();
+                $table->string('message', 100)->nullable();
                 $table->string('request_id', 32)->nullable();
-                $table->string('request_path', 100)->nullable();
-                $table->string('request_data', 2000)->nullable();
-                $table->string('response_data', 2000)->nullable();
+                $table->string('trace', 2000)->nullable();
+                $table->string('exception', 200)->nullable();
                 $table->timestamps();
             });
         }

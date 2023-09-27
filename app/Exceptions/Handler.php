@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Models\ExceptionLog;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
 
@@ -28,10 +29,32 @@ class Handler extends ExceptionHandler
         });
 
         $this->renderable(function (Throwable $e) {
-           return response()->json([
-               'code' => $e->getCode(),
-               'message' => $e->getMessage(),
-           ]);
+            $log = new ExceptionLog();
+            $log->setTableName(date('Y_m_d'));
+            $log->exception = get_class($e);
+            $log->message = $e->getMessage();
+            $log->trace = substr($e->getTraceAsString(), 0, 2000);
+            $log->request_id = request()->request_id ?: null;
+            $log->save();
+
+            if (env('APP_DEBUG')) {
+                return response()->json([
+                    'code' => $e->getCode(),
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTrace()
+                ], 500);
+            } else {
+                if ($e instanceof \Exception) {
+                    return response()->json([
+                        'code' => $e->getCode(),
+                        'message' => $e->getMessage()
+                    ], 500);
+                }
+                return response()->json([
+                    'code' => 500,
+                    'message' => 'Internal Server Error'
+                ], 500);
+            }
         });
     }
 }
